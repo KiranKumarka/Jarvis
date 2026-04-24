@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>J.A.R.V.I.S</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+:root {
+  --arc: #00d4ff; --arc-dim: #0088aa; --arc-glow: rgba(0,212,255,0.4);
+  --gold: #ffd700; --gold-glow: rgba(255,215,0,0.35);
+  --danger: #ff4455; --bg: #020b14;
+  --panel: rgba(0,212,255,0.04); --border: rgba(0,212,255,0.18);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:var(--bg); color:var(--arc);
+  font-family:'Share Tech Mono',monospace;
+  min-height:100vh; display:flex; flex-direction:column;
+  align-items:center; overflow-x:hidden;
+}
+body::before {
+  content:''; position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,0.025) 1px,transparent 1px);
+  background-size:44px 44px;
+  animation:gridDrift 25s linear infinite;
+  pointer-events:none; z-index:0;
+}
+@keyframes gridDrift { to { transform:translateY(44px); } }
+body::after {
+  content:''; position:fixed; top:-2px; left:0;
+  width:100%; height:2px;
+  background:linear-gradient(90deg,transparent,var(--arc),transparent);
+  animation:scan 5s linear infinite;
+  pointer-events:none; z-index:1; opacity:.4;
+}
+@keyframes scan { to { top:100vh; } }
+.corners span {
+  position:fixed; width:36px; height:36px;
+  border-color:var(--arc); border-style:solid; opacity:.25; z-index:1;
+}
+.corners span:nth-child(1){top:10px;left:10px;border-width:2px 0 0 2px}
+.corners span:nth-child(2){top:10px;right:10px;border-width:2px 2px 0 0}
+.corners span:nth-child(3){bottom:10px;left:10px;border-width:0 0 2px 2px}
+.corners span:nth-child(4){bottom:10px;right:10px;border-width:0 2px 2px 0}
+.wrap {
+  position:relative; z-index:2; width:100%; max-width:680px;
+  padding:16px 14px 50px;
+  display:flex; flex-direction:column; align-items:center; gap:20px;
+}
+.hdr { text-align:center; padding-top:14px; }
+.hdr h1 {
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(26px,7vw,50px); font-weight:900; letter-spacing:.3em;
+  color:var(--arc);
+  text-shadow:0 0 30px var(--arc-glow),0 0 70px var(--arc-glow);
+  animation:hdrPulse 3s ease-in-out infinite;
+}
+@keyframes hdrPulse {
+  50%{text-shadow:0 0 50px var(--arc-glow),0 0 120px var(--arc-glow),0 0 180px rgba(0,212,255,.15)}
+}
+.hdr p { font-size:10px; letter-spacing:.4em; color:var(--arc-dim); margin-top:5px; }
+.reactor { position:relative; width:150px; height:150px; cursor:pointer; flex-shrink:0; }
+.rcore {
+  position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+  width:56px; height:56px; border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,var(--arc) 45%,var(--arc-dim) 100%);
+  box-shadow:0 0 20px var(--arc),0 0 60px var(--arc-glow);
+  animation:corePulse 2s ease-in-out infinite; z-index:3;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Orbitron',sans-serif; font-size:7px; font-weight:700;
+  color:var(--bg); text-align:center; line-height:1.3;
+}
+@keyframes corePulse{50%{box-shadow:0 0 40px var(--arc),0 0 100px var(--arc-glow)}}
+.rring {
+  position:absolute; top:50%; left:50%;
+  transform:translate(-50%,-50%); border-radius:50%; border:1.5px solid transparent;
+}
+.r1{width:86px;height:86px;border-top-color:var(--arc);border-right-color:var(--arc);animation:spin 3s linear infinite}
+.r2{width:116px;height:116px;border-bottom-color:var(--arc);border-left-color:var(--arc-dim);animation:spinR 4s linear infinite}
+.r3{width:148px;height:148px;border-top-color:rgba(0,212,255,.25);border-bottom-color:rgba(0,212,255,.25);animation:spin 9s linear infinite}
+.rdots{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:124px;height:124px;}
+.rdot{position:absolute;width:5px;height:5px;background:var(--arc);border-radius:50%;box-shadow:0 0 6px var(--arc);}
+.rdot:nth-child(1){top:0;left:50%;transform:translateX(-50%)}
+.rdot:nth-child(2){bottom:0;left:50%;transform:translateX(-50%)}
+.rdot:nth-child(3){left:0;top:50%;transform:translateY(-50%)}
+.rdot:nth-child(4){right:0;top:50%;transform:translateY(-50%)}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes spinR{to{transform:translate(-50%,-50%) rotate(-360deg)}}
+.status{display:flex;align-items:center;gap:10px;font-size:11px;letter-spacing:.18em;color:var(--arc-dim);}
+.sdot{width:8px;height:8px;border-radius:50%;background:var(--arc);box-shadow:0 0 8px var(--arc);animation:blink 1.8s ease-in-out infinite;}
+.sdot.listen{background:var(--gold);box-shadow:0 0 8px var(--gold);animation:fastBlink .4s infinite}
+.sdot.think{background:#ff8800;box-shadow:0 0 8px #ff8800;animation:fastBlink .25s infinite}
+.sdot.err{background:var(--danger);box-shadow:0 0 8px var(--danger);animation:none}
+@keyframes blink{50%{opacity:.25}}
+@keyframes fastBlink{50%{opacity:.1}}
+.stats{
+  width:100%; display:flex; justify-content:space-between;
+  padding:10px 14px; background:var(--panel);
+  border:1px solid var(--border); border-radius:3px;
+  font-size:9px; letter-spacing:.15em; color:var(--arc-dim);
+}
+.stat{display:flex;flex-direction:column;align-items:center;gap:2px}
+.stat b{color:var(--arc);font-size:13px}
+.chat-panel{width:100%;background:var(--panel);border:1px solid var(--border);border-radius:3px;position:relative;overflow:hidden;}
+.chat-label{position:absolute;top:9px;left:13px;font-size:9px;letter-spacing:.3em;color:var(--arc-dim);opacity:.55;}
+.chat-msgs{padding:32px 12px 12px;min-height:200px;max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:11px;}
+.chat-msgs::-webkit-scrollbar{width:2px}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--arc-dim);border-radius:2px}
+.msg{display:flex;flex-direction:column;gap:3px;animation:msgIn .3s ease-out;}
+@keyframes msgIn{from{opacity:0;transform:translateY(6px)}}
+.msg-lbl{font-size:9px;letter-spacing:.28em;opacity:.45}
+.msg.user .msg-lbl{color:var(--gold);text-align:right}
+.msg.jarvis .msg-lbl{color:var(--arc)}
+.msg-txt{font-size:13px;line-height:1.65;padding:9px 11px;border-radius:2px}
+.msg.user .msg-txt{background:rgba(255,215,0,.055);border:1px solid rgba(255,215,0,.2);color:var(--gold);text-align:right;align-self:flex-end;max-width:88%;}
+.msg.jarvis .msg-txt{background:rgba(0,212,255,.055);border:1px solid var(--border);color:var(--arc);max-width:95%;}
+.typing{display:none;align-items:center;gap:5px;padding:9px 11px;font-size:11px;color:var(--arc-dim)}
+.typing.on{display:flex}
+.tdot{width:4px;height:4px;background:var(--arc);border-radius:50%;animation:tb .7s ease-in-out infinite}
+.tdot:nth-child(2){animation-delay:.15s}
+.tdot:nth-child(3){animation-delay:.3s}
+@keyframes tb{50%{transform:translateY(-4px);opacity:1}0%,100%{opacity:.35}}
+.quick{width:100%;display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.qbtn{
+  background:var(--panel);border:1px solid var(--border);color:var(--arc);
+  font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:.08em;
+  padding:11px 10px;cursor:pointer;text-align:left;border-radius:2px;
+  transition:all .2s;position:relative;overflow:hidden;
+  display:flex;align-items:center;gap:8px;
+}
+.qbtn::before{content:'';position:absolute;left:0;top:0;width:2px;height:100%;background:var(--arc);box-shadow:0 0 6px var(--arc);}
+.qbtn:hover{background:rgba(0,212,255,.1);border-color:var(--arc);box-shadow:0 0 14px var(--arc-glow);transform:translateX(2px);}
+.voice-wrap{display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
+.vbtn{
+  width:68px;height:68px;border-radius:50%;border:2px solid var(--arc);
+  background:transparent;color:var(--arc);font-size:24px;cursor:pointer;
+  transition:all .3s;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 14px var(--arc-glow);
+}
+.vbtn:hover{background:rgba(0,212,255,.1);box-shadow:0 0 28px var(--arc-glow)}
+.vbtn.on{border-color:var(--gold);color:var(--gold);box-shadow:0 0 28px var(--gold-glow);animation:vPulse 1s ease-in-out infinite;}
+@keyframes vPulse{50%{box-shadow:0 0 55px var(--gold-glow)}}
+.vhint{font-size:11px;letter-spacing:.2em;color:var(--arc-dim);text-align:center}
+.wake{font-size:10px;letter-spacing:.22em;color:var(--arc-dim);opacity:.5;text-align:center}
+.irow{width:100%;display:flex;gap:8px}
+.tinput{
+  flex:1;background:var(--panel);border:1px solid var(--border);color:var(--arc);
+  font-family:'Share Tech Mono',monospace;font-size:13px;
+  padding:12px 13px;outline:none;border-radius:2px;transition:border-color .2s;
+}
+.tinput::placeholder{color:var(--arc-dim);opacity:.45}
+.tinput:focus{border-color:var(--arc);box-shadow:0 0 10px var(--arc-glow)}
+.sbtn{
+  background:rgba(0,212,255,.1);border:1px solid var(--arc);color:var(--arc);
+  font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.12em;padding:12px 15px;cursor:pointer;border-radius:2px;transition:all .2s;
+}
+.sbtn:hover{background:rgba(0,212,255,.2);box-shadow:0 0 14px var(--arc-glow)}
+.boot{
+  position:fixed;inset:0;background:rgba(2,11,20,.97);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:100;gap:18px;
+}
+.boot.gone{display:none}
+.boot-txt{
+  font-family:'Orbitron',sans-serif;
+  font-size:clamp(18px,5vw,34px);font-weight:700;
+  letter-spacing:.2em;color:var(--arc);
+  text-shadow:0 0 40px var(--arc-glow);
+}
+.boot-sub{font-size:11px;letter-spacing:.4em;color:var(--arc-dim)}
+.viz{display:flex;align-items:center;gap:3px;height:30px}
+.vbar{width:3px;border-radius:2px;background:var(--gold);opacity:.3}
+.viz.active .vbar{animation:vizAnim .6s ease-in-out infinite alternate;opacity:1;}
+.vbar:nth-child(1){--h:8px;animation-delay:0s}
+.vbar:nth-child(2){--h:18px;animation-delay:.1s}
+.vbar:nth-child(3){--h:26px;animation-delay:.2s}
+.vbar:nth-child(4){--h:20px;animation-delay:.05s}
+.vbar:nth-child(5){--h:12px;animation-delay:.15s}
+.vbar:nth-child(6){--h:22px;animation-delay:.25s}
+.vbar:nth-child(7){--h:16px;animation-delay:.08s}
+@keyframes vizAnim{to{height:var(--h,10px)}}
+</style>
+</head>
+<body>
+<div class="corners"><span></span><span></span><span></span><span></span></div>
+<div class="boot" id="boot">
+  <div class="boot-txt" id="bootTxt">INITIALIZING...</div>
+  <div class="boot-sub">J.A.R.V.I.S ONLINE</div>
+</div>
+<div class="wrap">
+  <div class="hdr">
+    <h1>J.A.R.V.I.S</h1>
+    <p>JUST A RATHER VERY INTELLIGENT SYSTEM</p>
+  </div>
+  <div class="reactor" onclick="toggleVoice()">
+    <div class="rring r3"></div><div class="rring r2"></div><div class="rring r1"></div>
+    <div class="rdots">
+      <div class="rdot"></div><div class="rdot"></div>
+      <div class="rdot"></div><div class="rdot"></div>
+    </div>
+    <div class="rcore">TAP<br>VOICE</div>
+  </div>
+  <div class="status">
+    <div class="sdot" id="sdot"></div>
+    <span id="stxt">SYSTEM READY</span>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="sTime">--:--</b>LOCAL TIME</div>
+    <div class="stat"><b id="sMsgs">0</b>TRANSMISSIONS</div>
+    <div class="stat"><b>ACTIVE</b>ARC STATUS</div>
+    <div class="stat"><b id="sDate">--</b>DATE</div>
+  </div>
+  <div class="chat-panel">
+    <div class="chat-label">// NEURAL FEED</div>
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="typing" id="typing">
+        <div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>
+        <span style="margin-left:5px;font-size:11px">Processing...</span>
+      </div>
+    </div>
+  </div>
+  <div class="quick">
+    <button class="qbtn" onclick="qa('Mera aaj ka din plan kar. Morning se raat tak ek solid schedule suggest kar.')">📅 PLAN MY DAY</button>
+    <button class="qbtn" onclick="qa('Mujhe Tony Stark jaisi motivational speech de — short, punchy, boss level.')">⚡ MOTIVATE ME</button>
+    <button class="qbtn" onclick="qa('Kuch fresh ideas do — productive ya fun, kuch bhi jo abhi try kar sakun.')">💡 IDEAS DO</button>
+    <button class="qbtn" onclick="qa('Aaj ke liye top 3 focus areas kya hone chahiye? Quick status report de.')">📊 STATUS REPORT</button>
+  </div>
+  <div class="voice-wrap">
+    <div class="viz" id="viz">
+      <div class="vbar" style="height:8px"></div><div class="vbar" style="height:14px"></div>
+      <div class="vbar" style="height:22px"></div><div class="vbar" style="height:18px"></div>
+      <div class="vbar" style="height:10px"></div><div class="vbar" style="height:20px"></div>
+      <div class="vbar" style="height:15px"></div>
+    </div>
+    <button class="vbtn" id="vbtn" onclick="toggleVoice()">🎙️</button>
+    <div class="vhint" id="vhint">TAP MIC OR ARC REACTOR TO SPEAK</div>
+    <div class="wake">Say "Jarvis" followed by your command</div>
+  </div>
+  <div class="irow">
+    <input class="tinput" id="tinput" placeholder="Type your command, Boss..." onkeydown="if(event.key==='Enter')sendText()"/>
+    <button class="sbtn" onclick="sendText()">SEND</button>
+  </div>
+</div>
+<script>
+const hist = [];
+let msgCount=0, isListening=false, recog=null;
+
+function tick(){
+  const n=new Date();
+  document.getElementById('sTime').textContent=n.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+  document.getElementById('sDate').textContent=n.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+tick(); setInterval(tick,1000);
+
+(function boot(){
+  const el=document.getElementById('bootTxt');
+  const steps=['INITIALIZING...','LOADING AI CORE...','VOICE SYSTEMS ONLINE...','HELLO, BOSS.'];
+  let i=0;
+  const iv=setInterval(()=>{
+    i++;
+    if(i<steps.length){el.textContent=steps[i];}
+    else{
+      clearInterval(iv);
+      setTimeout(()=>{
+        document.getElementById('boot').classList.add('gone');
+        greet();
+      },700);
+    }
+  },650);
+})();
+
+function greet(){
+  const h=new Date().getHours();
+  const g=h<12
+    ?"Good morning, Boss. All systems online. Voice and text both ready for your commands."
+    :h<17
+    ?"Good afternoon, Boss. J.A.R.V.I.S fully operational. What shall we accomplish today?"
+    :"Good evening, Boss. Systems active. Ready for your commands — what do you need?";
+  addMsg('jarvis',g);
+  speak(g);
+}
+
+function addMsg(role,text){
+  const c=document.getElementById('chatMsgs');
+  const t=document.getElementById('typing');
+  const d=document.createElement('div');
+  d.className=`msg ${role}`;
+  d.innerHTML=`<div class="msg-lbl">${role==='jarvis'?'// J.A.R.V.I.S':'// BOSS'}</div><div class="msg-txt">${text}</div>`;
+  c.insertBefore(d,t);
+  c.scrollTop=c.scrollHeight;
+  if(role==='user'){msgCount++;document.getElementById('sMsgs').textContent=msgCount;}
+}
+
+function showTyping(on){
+  document.getElementById('typing').classList.toggle('on',on);
+  if(on){const c=document.getElementById('chatMsgs');c.scrollTop=c.scrollHeight;}
+}
+
+async function ask(userMsg){
+  hist.push({role:'user',content:userMsg});
+  setStatus('think'); showTyping(true);
+  try{
+    const res=await fetch('/api/claude',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are J.A.R.V.I.S — Iron Man's AI. Rules:
+- Always call user "Boss" or "Sir"
+- British, witty, sharp, concise like Paul Bettany's JARVIS
+- Real useful responses, never hollow
+- Match user's language — if Hinglish, reply Hinglish
+- Medium length replies
+- Confident, never say I don't know`,
+        messages:hist
+      })
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const reply=data.content[0].text;
+    hist.push({role:'assistant',content:reply});
+    showTyping(false);
+    addMsg('jarvis',reply);
+    setStatus('ready');
+    speak(reply);
+  }catch(e){
+    showTyping(false);
+    addMsg('jarvis','Apologies Boss, connectivity issue. Please try again.');
+    setStatus('err');
+    setTimeout(()=>setStatus('ready'),3000);
+  }
+}
+
+function sendText(){
+  const inp=document.getElementById('tinput');
+  const v=inp.value.trim();
+  if(!v)return;
+  inp.value='';
+  addMsg('user',v);
+  ask(v);
+}
+
+function qa(p){addMsg('user',p);ask(p);}
+
+function toggleVoice(){isListening?stopListen():startListen();}
+
+function startListen(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){addMsg('jarvis','Boss, use Chrome on desktop or Safari on iPhone for voice commands.');return;}
+  recog=new SR();
+  recog.lang='en-IN';
+  recog.interimResults=false;
+  recog.maxAlternatives=1;
+  recog.onstart=()=>{
+    isListening=true; setStatus('listen');
+    document.getElementById('vbtn').classList.add('on');
+    document.getElementById('vbtn').textContent='🔴';
+    document.getElementById('vhint').textContent='LISTENING... SPEAK NOW, BOSS';
+    document.getElementById('viz').classList.add('active');
+  };
+  recog.onresult=e=>{
+    let t=e.results[0][0].transcript;
+    t=t.replace(/^jarvis[,.\s]*/i,'').trim()||'Hello Jarvis';
+    addMsg('user',t); ask(t);
+  };
+  recog.onerror=e=>{
+    stopListen();
+    if(e.error==='not-allowed'){
+      addMsg('jarvis','Boss, please allow microphone access in browser settings.');
+    }else if(e.error!=='aborted'){
+      addMsg('jarvis',`Voice error: ${e.error}. Try typing below.`);
+    }
+  };
+  recog.onend=()=>{if(isListening)stopListen();};
+  recog.start();
+}
+
+function stopListen(){
+  isListening=false; setStatus('ready');
+  document.getElementById('vbtn').classList.remove('on');
+  document.getElementById('vbtn').textContent='🎙️';
+  document.getElementById('vhint').textContent='TAP MIC OR ARC REACTOR TO SPEAK';
+  document.getElementById('viz').classList.remove('active');
+  if(recog){try{recog.stop();}catch(e){}recog=null;}
+}
+
+function speak(text){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const clean = text.replace(/[*_`#]/g,'').substring(0,300);
+  const u = new SpeechSynthesisUtterance(clean);
+  u.volume = 1;
+  u.rate = 0.93;
+  u.pitch = 0.82;
+  
+  const voices = window.speechSynthesis.getVoices();
+  
+  // Male voice dhundho
+  const maleVoice = 
+    voices.find(v => v.name.includes('Daniel')) ||
+    voices.find(v => v.name.includes('David') && v.lang.includes('en')) ||
+    voices.find(v => v.name.includes('Mark')) ||
+    voices.find(v => v.name.includes('Alex')) ||
+    voices.find(v => v.lang.includes('en-GB')) ||
+    voices.find(v => v.lang.includes('en-IN') && v.name.includes('Male')) ||
+    voices.find(v => v.lang.includes('en'));
+  
+  if(maleVoice) u.voice = maleVoice;
+  
+  // iOS fix - small delay
+  setTimeout(() => {
+    window.speechSynthesis.speak(u);
+  }, 100);
+}
+
+if(window.speechSynthesis){
+  speechSynthesis.onvoiceschanged=()=>speechSynthesis.getVoices();
+  speechSynthesis.getVoices();
+}
+
+function setStatus(s){
+  const dot=document.getElementById('sdot');
+  const txt=document.getElementById('stxt');
+  dot.className='sdot';
+  const map={ready:['','SYSTEM READY'],listen:['listen','VOICE INPUT ACTIVE'],think:['think','PROCESSING...'],err:['err','CONNECTION ERROR']};
+  const[cls,label]=map[s]||map.ready;
+  if(cls)dot.classList.add(cls);
+  txt.textContent=label;
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.code==='Space'&&e.target===document.body){e.preventDefault();toggleVoice();}
+});
+</script>
+</body>
+</html>
