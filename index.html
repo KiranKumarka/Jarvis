@@ -195,6 +195,7 @@ body::after {
   <div class="hdr">
     <h1>J.A.R.V.I.S</h1>
     <p>JUST A RATHER VERY INTELLIGENT SYSTEM</p>
+    <p style="font-size:9px;letter-spacing:.3em;color:var(--arc-dim);margin-top:4px;opacity:.7;">DESIGNED & DEVELOPED BY KIRANKUMAR KAPSE</p>
   </div>
   <div class="reactor" onclick="toggleVoice()">
     <div class="rring r3"></div><div class="rring r2"></div><div class="rring r1"></div>
@@ -311,7 +312,7 @@ async function ask(userMsg){
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
         system:`You are J.A.R.V.I.S — Iron Man's AI. Rules:
-- Always call user "Boss" or "Sir"
+- Always call user "KK BOSS" or "KK Sir"
 - British, witty, sharp, concise like Paul Bettany's JARVIS
 - Real useful responses, never hollow
 - Match user's language — if Hinglish, reply Hinglish
