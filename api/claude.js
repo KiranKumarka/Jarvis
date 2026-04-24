@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+const handler = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -8,13 +8,25 @@ export default async function handler(req, res) {
   }
 
   try {
+    const { messages, system } = req.body;
+
+    const groqMessages = [
+      { role: 'system', content: system || '' },
+      ...messages
+    ];
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.GROQ_API_KEY}`
       },
-      body: JSON.stringify(req.body)
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: groqMessages,
+        max_tokens: 1000,
+        temperature: 0.9
+      })
     });
 
     const data = await response.json();
@@ -32,4 +44,6 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(500).json({ error: { message: error.message } });
   }
-}
+};
+
+module.exports = handler;
